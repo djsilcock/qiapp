@@ -129,3 +129,71 @@ type Mutation {
 	addUser(user:UserInput):User
 	updateUser(user:UserInput):User
 }
+
+type ActionPoint {
+  id: ID!
+  rev: ID!
+  title: String!
+  people: ProjectPeople
+  description: String!
+  dates: ProjectDates
+  events: [Event]
+  methodology: String!
+  category: [Category]
+  lastUpdated: Date
+  lastUpdatedBy: User
+  flags: [Flag]
+}
+
+type Event {
+  id: ID!
+  rev: ID!
+  title: String!
+  people: ProjectPeople
+  eventDate: Date
+  triumphs: String!
+  challenges: String!
+  suggestions: String!
+  actionPoints: [ActionPoint]
+  dates: ProjectDates
+  description: String!
+  category: [Category]
+  email: String
+  lastUpdated: Date
+  lastUpdatedBy: User
+  flags: [Flag]
+}
+
+input ActionPointInput {
+  id: ID!
+  rev: ID!
+  title: String!
+  people: ProjectPeopleInput
+  description: String!
+  dates: ProjectDatesInput
+  events: [ID]
+  methodology: String!
+  category: [Category]
+  lastUpdated: Date
+  lastUpdatedBy: User
+  flags: [Flag]
+}
+
+input EventInput {
+  id: ID!
+  rev: ID!
+  title: String!
+  people: ProjectPeople
+  eventDate: Date
+  triumphs: String!
+  challenges: String!
+  suggestions: String!
+  actionPoints: [ActionPointInput]
+  dates: ProjectDates
+  description: String!
+  category: [Category]
+  email: String
+  lastUpdated: Date
+  lastUpdatedBy: User
+  flags: [Flag]
+}
