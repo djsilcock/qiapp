@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 import React, { useEffect, useMemo, useRef } from "react";
 import { Button, Label } from "semantic-ui-react";
-import FormContainer from "../lib/formbuilder";
+import FormContainer from "@djsilcock/formbuilder";
 import allUsersQuery from "../queries/allusers.gql";
 import addProjectQuery from "../queries/addproject.gql";
 
@@ -18,7 +18,7 @@ function addPerson(persongroup) {
   return async (item, { values, setFieldValue, queueModal }) => {
     const newitem = await queueModal({
       name: "people_popup",
-      vars: { text: item, value: "NEW-" + addedPersonCount++, grade: "" }
+      vars: { text: item, value: "NEW-" + addedPersonCount++, grade: "" },
     });
     setFieldValue("people.added", values.people.added.concat([newitem]));
     setFieldValue(
@@ -36,12 +36,12 @@ const addUserForm = [
     placeholder: "Name",
     required: true,
     validation: Yup.string().required(),
-    defaultvalue: ""
+    defaultvalue: "",
   },
   {
     name: "value",
     type: "hidden",
-    defaultvalue: ""
+    defaultvalue: "",
   },
   {
     name: "category",
@@ -58,11 +58,11 @@ const addUserForm = [
       Higher: "ST5-7",
       SAS: "Staff grade",
       Con: "Consultant",
-      Oth: "Other"
+      Oth: "Other",
     }),
     validation: Yup.string().required(),
-    defaultvalue: ""
-  }
+    defaultvalue: "",
+  },
 ];
 const addProjectForm = [
   {
@@ -72,9 +72,9 @@ const addProjectForm = [
         finish: Yup.date().min(
           Yup.ref("start"),
           "Finish date must be later than start date"
-        )
-      })
-    })
+        ),
+      }),
+    }),
   },
   {
     name: "title",
@@ -83,12 +83,12 @@ const addProjectForm = [
     placeholder: "Project Title",
     required: true,
     validation: Yup.string().required(),
-    defaultvalue: ""
+    defaultvalue: "",
   },
   {
     name: "people_popup",
     type: "modal",
-    formdef: addUserForm
+    formdef: addUserForm,
   },
   {
     name: "people.proposers",
@@ -100,7 +100,7 @@ const addProjectForm = [
     validation: Yup.array()
       .required()
       .min(1),
-    defaultvalue: []
+    defaultvalue: [],
   },
   {
     name: "people.new",
@@ -118,7 +118,7 @@ const addProjectForm = [
       );
     },
     defaultvalue: [],
-    displayif: values => values.people?.new?.length > 0
+    displayif: (values) => values.people?.new?.length > 0,
   },
   {
     name: "description",
@@ -127,7 +127,7 @@ const addProjectForm = [
     placeholder: "Enter description of project here",
     required: true,
     validation: Yup.string().required(),
-    defaultvalue: ""
+    defaultvalue: "",
   },
   {
     name: "dates.proposed",
@@ -135,7 +135,7 @@ const addProjectForm = [
     label: "When was this project proposed?",
     required: true,
     validation: Yup.date().required(),
-    defaultvalue: ""
+    defaultvalue: "",
   },
   {
     name: "methodology",
@@ -144,7 +144,7 @@ const addProjectForm = [
     placeholder: "Brief description of methodology eg notes review,survey etc",
     required: true,
     validation: Yup.string().required(),
-    defaultvalue: ""
+    defaultvalue: "",
   },
   {
     name: "category",
@@ -153,17 +153,17 @@ const addProjectForm = [
     label: "Areas covered",
     required: true,
     validation: Yup.array().required(),
-    defaultvalue: []
+    defaultvalue: [],
   },
   {
     name: "othertags",
     type: "text",
-    displayif: values => values?.category?.includes?.("other"),
+    displayif: (values) => values?.category?.includes?.("other"),
     label: "Other areas covered",
     placeholder: "Other areas covered",
     required: true,
     validation: Yup.string().required(),
-    defaultvalue: ""
+    defaultvalue: "",
   },
   {
     name: "people.leaders",
@@ -174,7 +174,7 @@ const addProjectForm = [
     search: true,
     allowNew: true,
     helptext: "Leave blank if you want somebody to volunteer to lead",
-    defaultvalue: []
+    defaultvalue: [],
   },
   {
     name: "email",
@@ -182,7 +182,7 @@ const addProjectForm = [
     label: "Contact email address for team:",
     placeholder: "Contact address",
     validation: Yup.string().email("Please enter a valid email address"),
-    defaultvalue: ""
+    defaultvalue: "",
   },
   {
     name: "people.involved",
@@ -192,33 +192,33 @@ const addProjectForm = [
     search: true,
     allowNew: true,
     addItem: addPerson("involved"),
-    defaultvalue: []
+    defaultvalue: [],
   },
   {
     type: "radio",
     options: [
       ["Yes", "Yes"],
-      ["No", "No"]
+      ["No", "No"],
     ],
     name: "advertise",
     label:
       "Would you like us to advertise your project to get more people involved?",
     required: true,
     validation: Yup.string().required(),
-    defaultvalue: ""
+    defaultvalue: "",
   },
   {
     type: "radio",
     options: [
       ["Yes", "Yes"],
-      ["No", "No"]
+      ["No", "No"],
     ],
     name: "mm_or_ci",
     label:
       "Is this project a result of a Morbidity and Mortality or Critical Incident event?",
     required: true,
     validation: Yup.string().required(),
-    defaultvalue: ""
+    defaultvalue: "",
   },
   {
     type: "radio",
@@ -227,7 +227,7 @@ const addProjectForm = [
       No: "No - Caldicott approval is not required",
       Dontknow:
         "Don't know - (the QI team will contact you to discuss whether this is needed)",
-      pending: "Caldicott approval is pending"
+      pending: "Caldicott approval is pending",
     }),
     name: "caldicott",
     label: "Does this project have Caldicott approval?",
@@ -235,7 +235,7 @@ const addProjectForm = [
       "Caldicott approval is required if patient identifiable information is being collected",
     required: true,
     validation: Yup.string().required(),
-    defaultvalue: ""
+    defaultvalue: "",
   },
   {
     type: "radio",
@@ -244,7 +244,7 @@ const addProjectForm = [
       No: "No - R+D approval is not required",
       DontKnow:
         "Don't know - (the QI team will contact you to discuss whether this is needed)",
-      Pending: "R+D approval is pending"
+      Pending: "R+D approval is pending",
     }),
     name: "research",
     label: "Does this project have R+D approval?",
@@ -263,7 +263,7 @@ const addProjectForm = [
     ),
     required: true,
     validation: Yup.string().required(),
-    defaultvalue: ""
+    defaultvalue: "",
   },
   {
     type: "datepicker",
@@ -271,7 +271,7 @@ const addProjectForm = [
     label: "When do you propose to start?",
     required: true,
     validation: Yup.date().required(),
-    defaultvalue: ""
+    defaultvalue: "",
   },
   {
     type: "datepicker",
@@ -279,7 +279,7 @@ const addProjectForm = [
     label: "When do you plan to finish or report on this project?",
     required: true,
     validation: Yup.date().required(),
-    defaultvalue: ""
+    defaultvalue: "",
   },
   {
     name: "canDisplay",
@@ -287,14 +287,14 @@ const addProjectForm = [
     options: Object.entries({
       Yes: "Yes",
       No: "No",
-      NotYet: "Not at this time - maybe later"
+      NotYet: "Not at this time - maybe later",
     }),
     label:
       "Are you happy for this project to be displayed on the QI whiteboard and on this website?",
     required: true,
     validation: Yup.string().required(),
-    defaultvalue: ""
-  }
+    defaultvalue: "",
+  },
 ];
 
 function ProjectInfoForm() {
@@ -311,11 +311,11 @@ function ProjectInfoForm() {
   const staffnames = useMemo(
     () =>
       usersquery?.allUsers
-        ?.map(s => ({
+        ?.map((s) => ({
           key: s.id,
           value: s.id,
           text: s.realName,
-          description: s.category
+          description: s.category,
         }))
         .concat(formref.current?.values.people.added ?? []) ?? [],
     [usersquery]
@@ -330,7 +330,7 @@ function ProjectInfoForm() {
     options["people.involved"] = staffnames;
     const newstatus = {
       ...status,
-      options
+      options,
     };
     formref.current.setStatus(newstatus);
   }, [staffnames]);
@@ -343,10 +343,10 @@ function ProjectInfoForm() {
   const initialStatus = { staffnames };
   var initialvalues = undefined;
 
-  const handleSubmit = async values => {
+  const handleSubmit = async (values) => {
     await apolloclient.mutate({
       mutation: addProjectQuery,
-      variables: { project: values }
+      variables: { project: values },
     });
     router.push("/");
   };

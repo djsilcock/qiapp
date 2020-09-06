@@ -1,4 +1,3 @@
-
 import firebase from "firebase-admin"
 console.log('firebase:',process.env.FIREBASE)
 const config= {

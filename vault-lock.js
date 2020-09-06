@@ -37,12 +37,8 @@ function decrypt(secret){
 	var decrypter=require('crypto').createDecipher(cipher,Buffer.from(decryptionKey,'base64'))
 	var decrypted=decrypter.update(secret,'base64','utf8')
 	decrypted+=decrypter.final('utf8')
-<<<<<<< HEAD
-	return JSON.parse(decrypted)
-=======
 
 	return decrypted
->>>>>>> 550569036f1d91aca8b054c58bb4dba9da7ee55b
 }	
 	
 crawldir (rootsourcedir,[])
