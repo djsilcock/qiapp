@@ -29,7 +29,27 @@ function TopNav (props){
 						
 					  
 						<Link href="/projects" passHref><Menu.Item><Icon name='list'/>Projects</Menu.Item></Link>
-				{loginbutton}
+				
+		 <Link href="/addevent">
+        <Menu.Item>
+          <Icon name="pencil" />
+          New event
+        </Menu.Item>
+      </Link>
+
+      <Link href="/events" passHref>
+        <Menu.Item>
+          <Icon name="list" />
+          All events
+        </Menu.Item>
+      </Link>
+      <Link href="/actions" passHref>
+        <Menu.Item>
+          <Icon name="list" />
+          Action points
+        </Menu.Item>
+      </Link>
+		 {loginbutton}
 				</Menu>)
 					
 	}
