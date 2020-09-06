@@ -2,4 +2,11 @@ node_modules
 .next
 credentials.json
 .env
+*.nedb
+mydb
+newdb
+db
+testdatabase
+database
+database2
 secrets

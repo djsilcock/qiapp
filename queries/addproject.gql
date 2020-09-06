@@ -1,14 +1,8 @@
-query projectList {
-  projectList {
+mutation addProject($project: ProjectInput!) {
+  addProject(project: $project) {
     id
-    rev
     title
     people {
-      proposers {
-        id
-        realName
-        userName
-      }
       leaders {
         id
         realName
