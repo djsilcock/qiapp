@@ -1,94 +1,151 @@
-import React, { ReactNode, MutableRefObject } from "react";
+import React, { ReactNode, MutableRefObject, Component } from "react";
 import { Form as SUIForm, Table, Button } from "semantic-ui-react";
-import { useForm, FormContext } from "react-hook-form";
 import {
-  DeepPartial,
-  FormContextValues,
-  UseFormOptions,
-} from "react-hook-form";
-import { update } from "lodash";
-import PropTypes from "prop-types";
+  observable,
+  get as mobxGet,
+  set as mobxSet,
+  values as mobxValues,
+  computed,
+  ObservableMap,
+  reaction,
+} from "mobx";
+import { fromPromise } from "mobx-utils";
 
-interface FormPropsCore {
-  onSubmit(values: any): void;
-  onCancel(): void;
-  submitContent?: ReactNode;
-  submitIcon?: string;
-  cancelContent?: ReactNode;
-  cancelIcon?: string;
-  resetContent?: ReactNode;
-  resetIcon?: string;
+import _ from "lodash";
 
-  children: any;
-  action?: string;
+function defaultValidator(form, fieldsToValidate) {
+  console.warn("using default validator which always returns ok");
+  return { valid: true, isValidating: false, errors: {} };
+}
+function defaultActiveFields(form, fieldsToCheck) {
+  console.warn("using default activator which always returns active");
+  return _.mapValues(form.fields, () => true);
+}
+export const FormContext = React.createContext(null);
+export function makeFormObservable({
+  parentForm,
+  validateMode = "onSubmit",
+  validator = defaultValidator,
+  activeFields = defaultActiveFields,
+}) {
+  const formObservable = observable({
+    fields: {},
+    parentForm,
+    formDefinition: {},
+    data: {},
+    allFieldsShouldValidate: false,
+    get touchedFields() {
+      return this.fieldOrder.filter(
+        (fieldname) => mobxGet(this.fields, fieldname)?.touched
+      );
+    },
+    set touchedFields(fieldsToTouch) {
+      mobxValues(this.fieldOrder).forEach((field) => {
+        field.touched = fieldsToTouch.includes(field.name);
+      });
+    },
+    get allValues() {
+      const returnValues = {};
+      Object.values(
+        this.fields
+      ).forEach((field: { name: string; value: any }) =>
+        _.set(returnValues, field.name, field.value)
+      );
+      return returnValues;
+    },
+    set allValues(values) {
+      Object.values(this.fields).forEach((field) => {
+        field.reInitialise(values);
+      });
+    },
+
+    registerField(fieldDef) {
+      const { name, defaultValue, helptext, placeholder } = fieldDef;
+      if (formObservable.fields[name]) return formObservable.fields[name];
+      const fieldObservable = observable({
+        name,
+        formDefinition: formObservable.formDefinition,
+        get _validationResults() {
+          return fromPromise.resolve(
+            validator(formObservable.formDefinition, [name])
+          );
+        },
+        get validState() {
+          return this._validationResults.state == "fulfilled"
+            ? Object.keys(this.validationResults.value).length == 0
+              ? "valid"
+              : "invalid"
+            : "validating";
+        },
+        get errors() {
+          return this._validationResults.value;
+        },
+        _value: defaultValue,
+        get value() {
+          return this.isActive ? this._value : undefined;
+        },
+        set value(v) {
+          this._value = v;
+        },
+        get shouldDisplayError() {
+          return (
+            (this.touched && validateMode == "onBlur") ||
+            formObservable.allFieldsShouldValidate
+          );
+        },
+        helptext,
+        placeholder,
+        get isActive() {
+          return activeFields(formObservable.formDefinition, [name])[name];
+        },
+        reInitialise(newData: { [key: string]: any }) {
+          this._value = _.get(newData, name);
+          this.touched = false;
+        },
+      });
+      mobxSet(formObservable.fields, name, fieldObservable);
+      return fieldObservable;
+    },
+  });
+
+  return formObservable;
 }
 
-interface FormPropsWithContext extends FormPropsCore {
-  formContext: FormContextValues;
-  defaultValues?: DeepPartial<Record<string, any>>;
-}
-
-interface FormPropsWithUFO extends FormPropsCore, UseFormOptions {}
-type FormProps = FormPropsWithContext | FormPropsWithUFO;
-
-function isFormPropsWithContext(props): props is FormPropsWithContext {
-  return typeof props.formContext !== "undefined";
-}
-export const Form = (props: FormProps) => {
+export function Form(props) {
   const {
-    onSubmit,
-    onCancel,
-    submitContent = "Submit",
-    submitIcon = "check",
-    cancelContent = "Cancel",
-    cancelIcon = "cancel",
-    resetContent = "Reset",
-    resetIcon = "undo",
     children,
     action,
-    defaultValues = {},
+    validateMode = "onSubmit",
+    validator = defaultValidator,
+    activeFields = defaultActiveFields,
   } = props;
 
-  const formContext = isFormPropsWithContext(props)
-    ? props.formContext
-    : useForm({
-        mode: props.mode,
-        reValidateMode: props.reValidateMode,
-        defaultValues: props.defaultValues,
-        validationSchema: props.validationSchema,
-        validationResolver: props.validationResolver,
-        validationContext: props.validationContext,
-        validateCriteriaMode: props.validateCriteriaMode,
-        submitFocusError: props.submitFocusError,
-      });
-  //<SUIForm action={action} onSubmit={formContext.handleSubmit(onSubmit)}>
+  const parentForm = React.useContext(FormContext);
+  const formObservable = React.useRef(null);
+  if (formObservable.current == null)
+    formObservable.current = makeFormObservable({
+      parentForm,
+      validateMode,
+      validator,
+      activeFields,
+    });
 
   return (
-    <FormContext {...formContext}>
-      <SUIForm action={action} onSubmit={formContext.handleSubmit(onSubmit)}>
-        <Table selectable>
-          <Table.Body>{children}</Table.Body>
-        </Table>
-
-        <Button
-          icon={submitIcon}
-          content={submitContent}
-          type="submit"
-          onClick={formContext.handleSubmit(onSubmit)}
-        />
-        <Button
-          icon={resetIcon}
-          content={resetContent}
-          type="button"
-          onClick={formContext.reset.bind(null, defaultValues)}
-        />
-        <Button
-          icon={cancelIcon}
-          content={cancelContent}
-          type="button"
-          onClick={onCancel}
-        />
-      </SUIForm>
-    </FormContext>
+    <FormContext.Provider value={formObservable}>
+      <SUIForm action={action}>{children}</SUIForm>
+    </FormContext.Provider>
   );
-};
+}
+
+/*<Table selectable>
+        <Table.Body>{fields}</Table.Body>
+      </Table>
+      <InitValuesSetter initValues={initialValues} />
+      <SubmitButton />
+      <ResetButton />
+      <Button
+        icon={cancelIcon}
+        content={cancelContent}
+        type="button"
+        onClick={onCancel}
+      /> */

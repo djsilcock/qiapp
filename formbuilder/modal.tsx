@@ -48,9 +48,8 @@ export const ModalComponent = ({ controller, children }: ModalProps) => {
           onSubmit={submitModal}
           onCancel={cancelModal}
           defaultValues={defaultValues.current}
-        >
-          {children}
-        </Form>
+          initialValues={}
+        />
       </Modal>
     )
   );

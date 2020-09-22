@@ -1,50 +1,38 @@
-import React, {
-  JSXElementConstructor,
-  ReactNode,
-  ReactElement,
-  ReactNodeArray,
-} from "react";
-import PropTypes from "prop-types";
+import React from "react";
+import { FormContext } from "./Form";
 import { Form, Message as Msg, Table } from "semantic-ui-react";
-import { useFormContext } from "react-hook-form";
-import { get } from "lodash";
+import { Observer } from "mobx-react";
 
-import { ValidationOptions } from "react-hook-form";
-
-export interface FormRowProps {
-  name: string;
-  id?: string;
-  required?: boolean;
-  label: ReactNode;
-  helptext?: ReactNode;
-  validation?: ValidationOptions;
-}
-interface FormRowComponentProps extends FormRowProps {
-  component: JSXElementConstructor<any>;
-}
-interface FormRowChildrenProps extends FormRowProps {
-  children: ReactNode;
+function ErrorMessage({ name }) {
+  const formContext = React.useContext(FormContext);
+  return (
+    <Observer>
+      {() => {
+        const field = formContext.fields[name];
+        return field.validState == "invalid" ? (
+          <Msg error visible>
+            {field.errors}
+          </Msg>
+        ) : null;
+      }}
+    </Observer>
+  );
 }
 
-const FormRow: React.FC<FormRowChildrenProps | FormRowComponentProps> = ({
+function FormRow({
   component: Component,
+  registerField,
   label,
   id,
   name,
   helptext,
   children,
+  errorMessage,
   required = false,
-  validation = {},
   ...componentprops
-}: any) => {
-  const formContext = useFormContext();
-  const errorMessage = get(formContext.errors, name, null);
-  if (required || validation.required) {
-    required = true;
-    validation.required = true;
-  }
+}: any) {
   id = id || `${name}-control`;
-  Object.assign(componentprops, { name, id, validation });
+  Object.assign(componentprops, { name, id });
 
   return (
     <Table.Row>
@@ -53,21 +41,19 @@ const FormRow: React.FC<FormRowChildrenProps | FormRowComponentProps> = ({
           <label htmlFor={id}>{label}</label>
         </Form.Field>
         {helptext ? <Msg info>{`${helptext}`}</Msg> : null}
-        {errorMessage && (
-          <Msg error visible>
-            {errorMessage.message || "Please check your response here"}
-          </Msg>
-        )}
+        <ErrorMessage></ErrorMessage>
       </Table.Cell>
       <Table.Cell width={8}>
         <Form.Field error={!!errorMessage}>
-          {Component ? <Component {...componentprops} /> : children}
+          {Component ? (
+            <Component value={value} {...componentprops} />
+          ) : (
+            children
+          )}
         </Form.Field>
       </Table.Cell>
     </Table.Row>
   );
-};
-
-FormRow.displayName = "FormRow";
+}
 
 export { FormRow };

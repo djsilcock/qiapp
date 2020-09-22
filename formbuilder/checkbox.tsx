@@ -5,35 +5,45 @@ import { chunk } from "lodash";
 import { Grid } from "semantic-ui-react";
 import PropTypes from "prop-types";
 import { FormRow, FormRowProps } from "./FormRow";
-import { useFormContext, ValidationOptions } from "react-hook-form";
-//import { expandValidator } from "./utils/expandValidator";
+import { useRecoilState, RecoilState } from "recoil";
 
 interface CheckboxRadioProps {
   options: Array<[string, string]>;
   name: string;
-  type?: "radio" | "checkbox";
-  validation?: ValidationOptions;
+  type: "checkbox" | "radio";
+  value: RecoilState<string | string[]>;
 }
 
 interface BaseCheckboxProps extends CheckboxRadioProps {
   numCols: 1 | 2 | 3 | 4 | 5;
-  type: "radio" | "checkbox";
 }
-
-export const BaseCheckboxComponent: React.FC<BaseCheckboxProps> = ({
+export function BaseCheckboxComponent(props: BaseCheckboxProps): any;
+export function BaseCheckboxComponent({
   numCols,
   options,
   name,
   type,
-  validation,
-}) => {
-  const { register } = useFormContext();
+  value: valueAtom,
+}) {
+  const [valueRaw, setValue] = useRecoilState(valueAtom);
+  const value = Array.isArray(valueRaw)
+    ? new Set(valueRaw)
+    : new Set([valueRaw]);
   var buttons = options.map(([val, btnlabel]) => (
     <div key={val}>
       <div className={type == "radio" ? "ui radio checkbox" : "ui checkbox"}>
         <input
           type={type}
-          ref={register(validation)}
+          checked={value.has(val)}
+          onChange={(evt) => {
+            const checked = evt.target.checked;
+            if (type == "radio" && checked) return setValue(val);
+            setValue((vals: string[]) => {
+              const s = new Set(vals);
+              checked ? s.add(val) : s.delete(val);
+              return Array.from(s);
+            });
+          }}
           id={`${name}-${val}`}
           name={name}
           value={val}
@@ -54,7 +64,7 @@ export const BaseCheckboxComponent: React.FC<BaseCheckboxProps> = ({
       </Grid>
     </>
   );
-};
+}
 
 export function RadioComponent(props: CheckboxRadioProps) {
   return <BaseCheckboxComponent type="radio" numCols={1} {...props} />;
@@ -67,9 +77,7 @@ interface CheckboxRadioFieldProps extends CheckboxRadioProps, FormRowProps {}
 export function RadioField(props: CheckboxRadioFieldProps) {
   return <FormRow component={RadioComponent} {...props} />;
 }
-RadioField.getDefaultValue = () => "";
 
 export function CheckboxField(props: CheckboxRadioFieldProps) {
   return <FormRow component={CheckboxComponent} {...props} />;
 }
-CheckboxField.getDefaultValue = () => [];

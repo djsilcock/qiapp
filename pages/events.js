@@ -10,29 +10,31 @@ import {
   Header,
   Button,
   Menu,
-  Icon
+  Icon,
 } from "semantic-ui-react";
 
 //import { useQuery } from "../lib/apollo";
 //import PROJECT_LIST from "../queries/projectlist.gql";
 //import CURRENT_USER from "../queries/currentuser.gql";
-import { useCurrentUser } from "../lib/signin";
-import useSWR from "swr";
-
+//import { useCurrentUser } from "../lib/signin";
+//import useSWR from "swr";
+function useCurrentUser() {
+  return null;
+}
 function generateLabels(doc, isAdmin) {
-  const labels = doc.category.map(categoryTag => ({
+  const labels = doc.category.map((categoryTag) => ({
     key: categoryTag,
     text: taglist[categoryTag],
     title: taglist[categoryTag],
-    color: "grey"
+    color: "grey",
   }));
 
-  doc.flags.forEach(f => {
+  doc.flags.forEach((f) => {
     const ADMIN_ONLY = [
       "needsVetting",
       "maybeCaldicott",
       "maybeResearch",
-      "hidden"
+      "hidden",
     ];
     if (ADMIN_ONLY.includes(f) && !isAdmin) return;
 
@@ -51,29 +53,29 @@ function generateLabels(doc, isAdmin) {
       notCaldicott: [
         "IG",
         "Information Governance approval not required",
-        "grey"
+        "grey",
       ],
       notResearch: ["R+D", "R+D approval not required", "grey", true],
       criticalIncident: ["CI", "relates to a previous incident or M+M", "blue"],
-      hidden: ["Hidden", "Hidden from non-admins", "grey"]
+      hidden: ["Hidden", "Hidden from non-admins", "grey"],
     };
     if (labeldefs[f]) {
       labels.push({
         key: f,
         text: labeldefs[f][0],
         title: labeldefs[f][1],
-        color: labeldefs[f][2]
+        color: labeldefs[f][2],
       });
     }
   });
 
-  const rowcolor = labels.some(lab => lab.color == "red")
+  const rowcolor = labels.some((lab) => lab.color == "red")
     ? "red"
-    : labels.some(lab => lab.color == "orange")
+    : labels.some((lab) => lab.color == "orange")
     ? "orange"
-    : labels.some(lab => lab.color == "yellow")
+    : labels.some((lab) => lab.color == "yellow")
     ? "yellow"
-    : labels.some(lab => lab.color == "blue")
+    : labels.some((lab) => lab.color == "blue")
     ? "blue"
     : undefined;
   return [labels, rowcolor];
@@ -107,9 +109,9 @@ function DatabaseRow({ doc }) {
       </Link>
     );
   }
-  var iAmLeader = people.leaders.find(i => i.id == currentuser.id) || isAdmin;
+  var iAmLeader = people.leaders.find((i) => i.id == currentuser.id) || isAdmin;
   var iAmInvolved =
-    iAmLeader || people.involved.find(i => i.id == currentuser.id);
+    iAmLeader || people.involved.find((i) => i.id == currentuser.id);
   const status = { info: 1, warning: 2, danger: 3 };
   var [labels, rowstatus] = generateLabels(doc, isAdmin);
   const projectComplete = false;
@@ -118,14 +120,14 @@ function DatabaseRow({ doc }) {
     buttons.push({
       pathname: "/enquire",
       icon: "question-circle",
-      text: "Enquire about this"
+      text: "Enquire about this",
     });
   if (iAmLeader && !projectComplete) {
     buttons.push({ pathname: "/edit", icon: "pencil", text: "Edit proposal" });
     buttons.push({
       pathname: "/addoutcome",
       icon: "pencil",
-      text: "Add outcome information"
+      text: "Add outcome information",
     });
   } else {
     buttons.push({ pathname: "/view", icon: "info", text: "View proposal" });
@@ -133,7 +135,7 @@ function DatabaseRow({ doc }) {
       buttons.push({
         pathname: "/viewoutcome",
         icon: "info",
-        text: "View outcome information"
+        text: "View outcome information",
       });
   }
 
@@ -142,7 +144,7 @@ function DatabaseRow({ doc }) {
     <Table.Row
       color={rowstatus}
       id={doc.id}
-      onClick={e => {
+      onClick={(e) => {
         setModalOpen(true);
         e.stopPropagation();
       }}
@@ -162,15 +164,16 @@ function DatabaseRow({ doc }) {
             {description}
             <hr />
             <b>Proposed by: </b>
-            {people.proposers.map(i => i.realName).join(",")}
+            {people.proposers.map((i) => i.realName).join(",")}
             <br />
             <b>Project {lead}: </b>
-            {people.leaders.map(i => i.realName).join(",") ?? "(No leader yet)"}
+            {people.leaders.map((i) => i.realName).join(",") ??
+              "(No leader yet)"}
             <br />
             {people.involved.length > 0 ? (
               <span>
                 <b>Others involved: </b>
-                {people.involved.map(i => i.realName).join(",")}
+                {people.involved.map((i) => i.realName).join(",")}
               </span>
             ) : null}
             <hr />
@@ -188,7 +191,7 @@ function DatabaseRow({ doc }) {
               ))}
 
               <Button
-                onClick={e => {
+                onClick={(e) => {
                   setModalOpen(false);
                   e.stopPropagation();
                 }}
@@ -209,9 +212,10 @@ export function getServerSideProps() {
 }
 function DatabaseTable(props) {
   const [statusfilter, setstatusfilter] = React.useState("all");
-  const docsresults = useSWR(`/api/rest/event/all?filter=${statusfilter}`, {
-    initialData: props.data
-  });
+  //const docsresults = useSWR(`/api/rest/event/all?filter=${statusfilter}`, {
+  //  initialData: props.data
+  //});
+  const docsresults = { data: [] };
   const router = useRouter();
   console.log(docsresults);
   if (docsresults.isValidating) return "Waiting for database";
@@ -220,7 +224,7 @@ function DatabaseTable(props) {
   const currentuser = useCurrentUser();
   const isAdmin = !!currentuser?.isAdmin;
 
-  var listitems = docsresults.data.map(doc => {
+  var listitems = docsresults.data.map((doc) => {
     return (
       <DatabaseRow
         doc={doc}

@@ -1,11 +1,12 @@
 import React from "react";
 
 import Head from "next/head";
-import { SigninAssistant } from "../lib/signin";
+//import { SigninAssistant } from "../lib/signin";
 import TopNav from "../components/topnav.js";
 import { Grid } from "semantic-ui-react";
 import "react-semantic-ui-datepickers/dist/react-semantic-ui-datepickers.css";
-import { SWRConfig } from "swr";
+import { RecoilRoot } from "recoil";
+//import { SWRConfig } from "swr";
 async function fetchJSON(url) {
   const response = await fetch(url, { credentials: "include" });
   if (response.ok) {
@@ -13,12 +14,13 @@ async function fetchJSON(url) {
   }
   throw `${response.status}:${response.text}`;
 }
+function SigninAssistant({ children }) {
+  return children;
+}
 function MyApp({ Component, pageProps }) {
   return (
     <>
-      <SWRConfig
-        value={{ fetcher: process.browser ? url => fetchJSON(url) : () => {} }}
-      >
+      <RecoilRoot>
         <SigninAssistant>
           <div>
             <TopNav showbuttons={true} />
@@ -47,7 +49,7 @@ function MyApp({ Component, pageProps }) {
             ></script>
           </Head>
         </SigninAssistant>
-      </SWRConfig>
+      </RecoilRoot>
     </>
   );
 }

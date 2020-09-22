@@ -1,38 +1,31 @@
 /*seslint-disable react/prop-types*/
 import React, { ReactNode } from "react";
 import { DateInput } from "semantic-ui-calendar-react";
-import { Controller, ValidationOptions } from "react-hook-form";
 import { FormRow, FormRowProps } from "./FormRow";
-import PropTypes from "prop-types";
+import { RecoilState, useRecoilState } from "recoil";
 
 interface DatePickerProps {
   name: string;
   placeholder?: ReactNode;
-  validation?: ValidationOptions;
+  value: RecoilState<string>;
 }
 
 export function DatePickerComponent({
   name,
   placeholder,
-  validation,
+  value: valueAtom,
 }: DatePickerProps) {
+  const [value, setValue] = useRecoilState(valueAtom);
   return (
-    <Controller
-      as={
-        <DateInput
-          id={name}
-          placeholder={placeholder}
-          iconPosition="left"
-          value=""
-          onChange={() => {}}
-        />
-      }
-      name={name}
-      // eslint-disable-next-line no-unused-vars
-      onChange={([e, props]) => {
-        return props?.value;
+    <DateInput
+      id={name}
+      placeholder={placeholder}
+      iconPosition="left"
+      value={value}
+      onChange={(e, { value }) => {
+        setValue(value);
       }}
-      rules={validation}
+      name={name}
     />
   );
 }
@@ -41,4 +34,3 @@ interface DatePickerFieldProps extends FormRowProps, DatePickerProps {}
 export function DatePickerField(props: DatePickerFieldProps) {
   return <FormRow component={DatePickerComponent} id={props.name} {...props} />;
 }
-DatePickerField.getDefaultValue = () => "";

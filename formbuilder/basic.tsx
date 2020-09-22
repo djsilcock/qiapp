@@ -1,43 +1,41 @@
 import React from "react";
 import { Input, TextArea } from "./components";
-import { useFormContext, ValidationOptions } from "react-hook-form";
 import { FormRow, FormRowProps } from "./FormRow";
-import PropTypes from "prop-types";
+import {
+  useRecoilState,
+  useRecoilValue,
+  RecoilState,
+  atom,
+  useSetRecoilState,
+} from "recoil";
+import { newKey } from "./Form";
+import { makeStringValueErrorSelector, makeComponent } from "./common";
 
 interface TextComponentProps {
   multiline?: boolean;
   name: string;
   id?: string;
   placeholder?: string;
-  validation?: ValidationOptions;
+  value: RecoilState<any>;
+  touched: RecoilState<boolean>;
+  Component: Input | TextArea;
 }
 
-interface TAwithPrivate extends TextArea {
-  ref: React.MutableRefObject<HTMLTextAreaElement>;
-}
-interface InputWithPrivate extends Input {
-  inputRef: React.MutableRefObject<HTMLInputElement>;
-}
-export const TextComponent: React.FC<TextComponentProps> = ({
-  multiline,
+export const TextComponent = ({
+  Component,
   name,
-  validation,
   id,
+  value: valueAtom,
+  touched,
   ...props
 }) => {
-  const { register } = useFormContext();
-  return multiline ? (
-    <TextArea
-      ref={(r: TAwithPrivate) => register(r && r.ref.current, validation)}
-      id={id}
-      name={name}
-      {...props}
-    />
-  ) : (
-    <Input
-      ref={(r: InputWithPrivate) =>
-        register(r && r.inputRef.current, validation)
-      }
+  const [value, setValue] = useRecoilState(valueAtom);
+  const setTouched = useSetRecoilState(touched);
+  return (
+    <Component
+      value={value}
+      onChange={(e, { value }) => setValue(value)}
+      onBlur={() => setTouched(true)}
       id={id}
       name={name}
       {...props}
@@ -49,10 +47,37 @@ export function TextField(props: TextComponentProps & FormRowProps) {
   return <FormRow component={TextComponent} {...props} />;
 }
 
-TextField.defaultProps = { defaultValue: "" };
-TextField.getDefaultValue = () => {};
+export function HiddenComponent({ name, value: valueAtom }) {
+  const value: string = useRecoilValue(valueAtom);
+  return <input type="hidden" value={value} name={name} />;
+}
+export function HiddenField(props) {
+  return <FormRow component={HiddenComponent} {...props} />;
+}
 
-export function HiddenComponent({ name }) {
-  const { register } = useFormContext();
-  return <input ref={register} name={name} />;
+export function text(spec) {
+  return (formContext) =>
+    makeTextComponent(TextField, formContext, { Component: Input, ...spec });
+}
+export function textarea(spec) {
+  return (formContext) =>
+    makeTextComponent(TextField, formContext, { Component: TextArea, ...spec });
+}
+
+function makeTextComponent(Component, formContext, spec) {
+  const defaultValue = spec.defaultValue || (spec.multiple ? [] : "");
+
+  const valueAtom: RecoilState<string> = atom({
+    key: newKey(),
+    default: defaultValue,
+  });
+
+  const errorSelectorFactory = makeStringValueErrorSelector;
+  return makeComponent({
+    Component,
+    formContext,
+    spec,
+    errorSelectorFactory,
+    valueAtom,
+  });
 }

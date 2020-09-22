@@ -1,41 +1,45 @@
 /*eslint-disable react/prop-types*/
-import React from "react";
+import React, { ReactNode, useState } from "react";
 import { Button } from "./components";
 import { FormRow } from "./FormRow";
-import { useFieldArray, useFormContext } from "react-hook-form";
+import { useRecoilState, RecoilState } from "recoil";
+
+interface ArrayPopupComponentProps {
+  name: string;
+  summary: (value: any) => ReactNode;
+  canAdd: Boolean;
+  onAddItem: () => Promise<any>;
+  value: RecoilState<any[]>;
+  onEditItem: (value: any) => Promise<any>;
+}
+
 export function ArrayPopupComponent({
   name,
   summary,
   canAdd,
   onAddItem,
+  value: valueAtom,
+  valueKeysAtom,
+  valueAtomFamily,
   onEditItem,
-}) {
-  const editFunc = React.useCallback(
-    (values) => {
-      if (onEditItem) return onEditItem(values);
-    },
-    [onEditItem]
-  );
-  const addFunc = React.useCallback(() => {
-    if (onAddItem) return onAddItem();
-    return editFunc({});
-  }, [onAddItem]);
-  const arrayhelpers = useFieldArray({ name });
-  const formContext = useFormContext();
+  modalForm,
+  getKeyFromValue = (value) => value.key,
+}: ArrayPopupComponentProps) {
+  const [values, setValue] = useRecoilState(valueAtom);
+  const [valueKeys, setValueKeys] = useRecoilState(valueKeysAtom);
+  const [editingState, setEditingState] = useState(null);
   return (
     <>
-      {arrayhelpers.fields.map((value, index) =>
-        summary({
+      {values.map((value, index) =>
+        <>summary({
           value,
-          remove: () => arrayhelpers.remove(index),
-          popup: () => {
-            editFunc(value)
-              .then((v) => formContext.setValue(`${name}[${index}]`, v))
-              .catch(() => {
-                return;
-              });
-          },
+          remove: () =>
+            setValueKeys((keys) =>
+              keys.slice(0, index).concat(keys.slice(index + 1))
+            ),
+          popup: () => setEditingState(getKeyFromValue(value)),
         })
+        </>
       )}
       {canAdd ? (
         <div>
@@ -44,12 +48,7 @@ export function ArrayPopupComponent({
             type="button"
             as="a"
             onClick={(evt) => {
-              evt.preventDefault();
-              addFunc()
-                .then(arrayhelpers.append)
-                .catch(() => {
-                  return;
-                });
+              setComponentState(["adding"]);
             }}
           />
         </div>
