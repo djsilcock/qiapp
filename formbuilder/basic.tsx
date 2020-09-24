@@ -1,49 +1,28 @@
 import React from "react";
 import { Input, TextArea } from "./components";
-import { FormRow, FormRowProps } from "./FormRow";
-import {
-  useRecoilState,
-  useRecoilValue,
-  RecoilState,
-  atom,
-  useSetRecoilState,
-} from "recoil";
-import { newKey } from "./Form";
+import { FormRow } from "./FormRow";
+import { observer } from "mobx-react";
 import { makeStringValueErrorSelector, makeComponent } from "./common";
+import { FormContext } from "./Form";
 
-interface TextComponentProps {
-  multiline?: boolean;
-  name: string;
-  id?: string;
-  placeholder?: string;
-  value: RecoilState<any>;
-  touched: RecoilState<boolean>;
-  Component: Input | TextArea;
-}
-
-export const TextComponent = ({
-  Component,
-  name,
-  id,
-  value: valueAtom,
-  touched,
-  ...props
-}) => {
-  const [value, setValue] = useRecoilState(valueAtom);
-  const setTouched = useSetRecoilState(touched);
+export const TextComponent = observer(({ Component, fieldObservable }) => {
   return (
     <Component
-      value={value}
-      onChange={(e, { value }) => setValue(value)}
-      onBlur={() => setTouched(true)}
-      id={id}
-      name={name}
-      {...props}
+      value={fieldObservable.value}
+      onChange={(e, { value }) => {
+        fieldObservable.value = value;
+      }}
+      onBlur={() => {
+        fieldObservable.touched = true;
+      }}
+      id={fieldObservable.id}
+      name={fieldObservable.name}
+      {...fieldObservable.componentProps}
     />
   );
-};
+});
 
-export function TextField(props: TextComponentProps & FormRowProps) {
+export function TextField(props) {
   return <FormRow component={TextComponent} {...props} />;
 }
 
@@ -62,22 +41,4 @@ export function text(spec) {
 export function textarea(spec) {
   return (formContext) =>
     makeTextComponent(TextField, formContext, { Component: TextArea, ...spec });
-}
-
-function makeTextComponent(Component, formContext, spec) {
-  const defaultValue = spec.defaultValue || (spec.multiple ? [] : "");
-
-  const valueAtom: RecoilState<string> = atom({
-    key: newKey(),
-    default: defaultValue,
-  });
-
-  const errorSelectorFactory = makeStringValueErrorSelector;
-  return makeComponent({
-    Component,
-    formContext,
-    spec,
-    errorSelectorFactory,
-    valueAtom,
-  });
 }

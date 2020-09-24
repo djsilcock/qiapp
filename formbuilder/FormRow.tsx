@@ -1,56 +1,58 @@
 import React from "react";
 import { FormContext } from "./Form";
 import { Form, Message as Msg, Table } from "semantic-ui-react";
-import { Observer } from "mobx-react";
+import { Observer, observer } from "mobx-react";
 
-function ErrorMessage({ name }) {
-  const formContext = React.useContext(FormContext);
+const ErrorMessage = observer(function ErrorMessage({ fieldObservable }) {
+  return fieldObservable.validState == "invalid" ? (
+    <Msg error visible>
+      {fieldObservable.errors}
+    </Msg>
+  ) : null;
+});
+
+const FieldLabel = observer(function FieldLabel({ fieldObservable }) {
   return (
-    <Observer>
-      {() => {
-        const field = formContext.fields[name];
-        return field.validState == "invalid" ? (
-          <Msg error visible>
-            {field.errors}
-          </Msg>
-        ) : null;
-      }}
-    </Observer>
+    <Form.Field
+      required={fieldObservable.required}
+      error={fieldObservable.validState == "invalid"}
+    >
+      <label htmlFor={fieldObservable.id}>{fieldObservable.label}</label>
+    </Form.Field>
   );
+});
+
+const HelpMessage = observer(function HelpMessage({ fieldObservable }) {
+  return fieldObservable.helptext ? (
+    <Msg info>{`${fieldObservable.helptext}`}</Msg>
+  ) : null;
+});
+
+{
 }
-
-function FormRow({
-  component: Component,
-  registerField,
-  label,
-  id,
-  name,
-  helptext,
+const ComponentField = observer(function ComponentField({
+  fieldObservable,
   children,
-  errorMessage,
-  required = false,
-  ...componentprops
-}: any) {
-  id = id || `${name}-control`;
-  Object.assign(componentprops, { name, id });
+}) {
+  return (
+    <Form.Field error={fieldObservable.validState == "invalid"}>
+      {children}
+    </Form.Field>
+  );
+});
 
+function FormRow({ fieldObservable, children }: any) {
   return (
     <Table.Row>
       <Table.Cell width={8}>
-        <Form.Field required={required} error={!!errorMessage}>
-          <label htmlFor={id}>{label}</label>
-        </Form.Field>
-        {helptext ? <Msg info>{`${helptext}`}</Msg> : null}
-        <ErrorMessage></ErrorMessage>
+        <FieldLabel fieldObservable={fieldObservable} />
+        <HelpMessage fieldObservable={fieldObservable} />
+        <ErrorMessage fieldObservable={fieldObservable} />
       </Table.Cell>
       <Table.Cell width={8}>
-        <Form.Field error={!!errorMessage}>
-          {Component ? (
-            <Component value={value} {...componentprops} />
-          ) : (
-            children
-          )}
-        </Form.Field>
+        <ComponentField fieldObservable={fieldObservable}>
+          {children}
+        </ComponentField>
       </Table.Cell>
     </Table.Row>
   );
