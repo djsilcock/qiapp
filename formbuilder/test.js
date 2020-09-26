@@ -1,3 +1,4 @@
+/*eslint-env jest */
 import { makeFormObservable } from "./makeFormObservable";
 
 test("creates a form", () => {

@@ -44,6 +44,7 @@ export interface FormObservable {
   touchedFields: string[];
   allValues: any;
   registerField(fieldDef: any): FieldObservable;
+  validState: "valid" | "invalid" | "validating";
 }
 
 export function makeFormObservable({
@@ -57,8 +58,15 @@ export function makeFormObservable({
     allFieldsShouldValidate: false,
     validators: [],
     fieldActivators: [],
-    get validationState() {
-      const fieldErrors = _.mapValues();
+    get validState() {
+      const fieldsValid = Object.values(this.fields).map(
+        (fld: FieldObservable) => fld.validState
+      );
+      return fieldsValid.some((f) => f == "invalid")
+        ? "invalid"
+        : fieldsValid.some((f) => f == "validating")
+        ? "validating"
+        : "valid";
     },
     get fieldsActive() {
       const activeFields = _.mapValues(this.fields, () => true);
