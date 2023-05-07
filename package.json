@@ -19,7 +19,7 @@
     "mobx-react": "^6.3.0",
     "mobx-react-form": "^2.0.8",
     "mobx-utils": "^5.6.1",
-    "next": "^9.5.0",
+    "next": "^13.4.1",
     "next-transpile-modules": "^3.1.0",
     "node-lipsum": "^1.0.1",
     "prettier": "^1.19.1",
